@@ -8,16 +8,18 @@ interface FieldProps {
 
 export function Field({ label, children, hint }: FieldProps) {
   return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-sm text-slate-300">{label}</span>
+    <label className="flex flex-col gap-1">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-600">
+        {label}
+      </span>
       {children}
-      {hint && <span className="text-xs text-slate-500">{hint}</span>}
+      {hint && <span className="text-[11px] text-neutral-500">{hint}</span>}
     </label>
   )
 }
 
 const inputClass =
-  'w-full rounded-xl border border-slate-600 bg-slate-800/80 px-3 py-2.5 text-base text-white outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20'
+  'w-full rounded-none border border-neutral-400 bg-white px-2.5 py-2 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900'
 
 export function NumberInput({
   className = '',
@@ -27,7 +29,7 @@ export function NumberInput({
     <input
       type="number"
       inputMode="decimal"
-      className={`${inputClass} ${className}`}
+      className={`tabular-nums ${inputClass} ${className}`}
       {...props}
     />
   )
@@ -63,16 +65,18 @@ export function Section({
 }) {
   return (
     <details
-      className="group rounded-2xl border border-slate-600/60 bg-slate-900/50 backdrop-blur"
+      className="group border border-neutral-400 bg-white"
       open={defaultOpen}
     >
-      <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-sky-300 select-none [&::-webkit-details-marker]:hidden">
+      <summary className="cursor-pointer list-none border-b border-transparent bg-neutral-100 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-800 select-none group-open:border-neutral-300 [&::-webkit-details-marker]:hidden">
         <span className="inline-flex items-center gap-2">
-          <span className="text-slate-400 transition group-open:rotate-90">▶</span>
+          <span className="inline-block w-3 text-center text-neutral-500 group-open:rotate-90">
+            ›
+          </span>
           {title}
         </span>
       </summary>
-      <div className="border-t border-slate-700/60 px-4 py-4">{children}</div>
+      <div className="border-t border-neutral-300 px-4 py-4">{children}</div>
     </details>
   )
 }
@@ -87,12 +91,24 @@ export function Card({
   className?: string
 }) {
   return (
-    <section
-      className={`rounded-2xl border border-slate-600/60 bg-slate-900/60 p-4 shadow-xl backdrop-blur sm:p-5 ${className}`}
-    >
-      {title && <h2 className="mb-4 text-lg font-semibold text-white">{title}</h2>}
-      {children}
+    <section className={`border border-neutral-400 bg-white ${className}`}>
+      {title && (
+        <div className="border-b border-neutral-300 bg-neutral-100 px-4 py-2.5">
+          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-neutral-800">
+            {title}
+          </h2>
+        </div>
+      )}
+      <div className="p-4">{children}</div>
     </section>
+  )
+}
+
+export function SubsectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <h3 className="mb-3 border-b border-neutral-200 pb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-700">
+      {children}
+    </h3>
   )
 }
 
@@ -105,16 +121,20 @@ export function Button({
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
 }) {
   const variants = {
-    primary: 'bg-sky-500 hover:bg-sky-400 text-slate-950',
-    secondary: 'bg-slate-700 hover:bg-slate-600 text-white',
-    danger: 'bg-rose-600/90 hover:bg-rose-500 text-white',
-    ghost: 'bg-transparent hover:bg-slate-800 text-sky-300',
+    primary:
+      'border border-neutral-900 bg-neutral-900 text-white hover:bg-neutral-800 hover:border-neutral-800',
+    secondary:
+      'border border-neutral-400 bg-white text-neutral-900 hover:bg-neutral-50',
+    danger:
+      'border border-red-700 bg-white text-red-800 hover:bg-red-50',
+    ghost:
+      'border border-transparent bg-transparent text-neutral-700 underline-offset-2 hover:underline',
   }
 
   return (
     <button
       type="button"
-      className={`rounded-xl px-4 py-2.5 text-sm font-medium transition active:scale-[0.98] disabled:opacity-50 ${variants[variant]} ${className}`}
+      className={`rounded-none px-3 py-2 text-xs font-semibold uppercase tracking-wide transition disabled:opacity-40 ${variants[variant]} ${className}`}
       {...props}
     >
       {children}
@@ -122,25 +142,53 @@ export function Button({
   )
 }
 
+export function ResultTable({
+  children,
+  className = '',
+}: {
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <table className={`w-full border-collapse text-sm ${className}`}>
+      <tbody>{children}</tbody>
+    </table>
+  )
+}
+
 export function ResultRow({
   label,
   value,
   highlight = false,
+  total = false,
 }: {
   label: string
   value: string
   highlight?: boolean
+  total?: boolean
 }) {
   return (
-    <div
-      className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 ${
-        highlight ? 'bg-sky-500/15 text-sky-100' : 'bg-slate-800/50'
+    <tr
+      className={`border-b border-neutral-200 ${
+        total
+          ? 'border-t-2 border-t-neutral-900 bg-neutral-100'
+          : highlight
+            ? 'bg-neutral-50'
+            : ''
       }`}
     >
-      <span className="text-sm text-slate-300">{label}</span>
-      <span className={`text-right font-semibold ${highlight ? 'text-sky-300' : 'text-white'}`}>
+      <td className="py-2 pr-4 text-neutral-600">{label}</td>
+      <td
+        className={`py-2 text-right tabular-nums ${
+          total ? 'text-base font-bold text-neutral-900' : 'font-semibold text-neutral-900'
+        }`}
+      >
         {value}
-      </span>
-    </div>
+      </td>
+    </tr>
   )
+}
+
+export function FormGrid({ children }: { children: ReactNode }) {
+  return <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>
 }

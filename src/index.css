@@ -2,13 +2,7 @@
 
 @theme {
   --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --color-surface: #0f172a;
-  --color-surface-2: #1e293b;
-  --color-surface-3: #334155;
-  --color-accent: #38bdf8;
-  --color-accent-dim: #0ea5e9;
-  --color-success: #34d399;
-  --color-border: #475569;
+  --font-mono: 'Consolas', 'Courier New', monospace;
 }
 
 html {
@@ -18,12 +12,18 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
-  background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-  color: #f1f5f9;
+  background: #e5e5e5;
+  color: #212121;
   font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 input[type='number']::-webkit-inner-spin-button,
 input[type='number']::-webkit-outer-spin-button {
   opacity: 1;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }

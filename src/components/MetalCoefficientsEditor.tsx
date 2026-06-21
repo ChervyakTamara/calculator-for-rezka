@@ -22,7 +22,9 @@ function CoefTable({
 }) {
   return (
     <div>
-      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">{title}</p>
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+        {title}
+      </p>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {MATERIALS.map((m) => (
           <Field key={m} label={MATERIAL_LABELS[m]}>
@@ -44,7 +46,7 @@ function CoefTable({
 export function MetalCoefficientsEditor({ thin, medium, thick, onChange }: Props) {
   return (
     <div className="space-y-4">
-      <p className="text-xs text-slate-500">
+      <p className="text-[11px] text-neutral-500">
         Между диапазонами (3–4 и 6–10 мм) коэффициент меняется плавно.
       </p>
       <CoefTable

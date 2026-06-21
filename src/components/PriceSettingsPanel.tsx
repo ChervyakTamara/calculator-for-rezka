@@ -1,6 +1,6 @@
 import type { PriceSettings } from '../types'
 import { MetalCoefficientsEditor } from './MetalCoefficientsEditor'
-import { Button, Field, NumberInput, Section } from './ui'
+import { Button, Field, NumberInput, Section, SubsectionTitle } from './ui'
 
 interface Props {
   settings: PriceSettings
@@ -18,7 +18,7 @@ export function PriceSettingsPanel({ settings, onChange, onSave, saved }: Props)
     <Section title="Настройки цен">
       <div className="space-y-5">
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-white">Электроэнергия</h3>
+          <SubsectionTitle>Электроэнергия</SubsectionTitle>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Field label="Цена кВт·ч, ₽">
               <NumberInput
@@ -66,7 +66,7 @@ export function PriceSettingsPanel({ settings, onChange, onSave, saved }: Props)
         </div>
 
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-white">Газ — общие параметры</h3>
+          <SubsectionTitle>Газ — общие параметры</SubsectionTitle>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Ø сопла, мм">
               <NumberInput
@@ -86,7 +86,7 @@ export function PriceSettingsPanel({ settings, onChange, onSave, saved }: Props)
         </div>
 
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-white">Газ O₂</h3>
+          <SubsectionTitle>Газ O₂</SubsectionTitle>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Цена, ₽/м³">
               <NumberInput
@@ -106,7 +106,7 @@ export function PriceSettingsPanel({ settings, onChange, onSave, saved }: Props)
         </div>
 
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-white">Газ N₂</h3>
+          <SubsectionTitle>Газ N₂</SubsectionTitle>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Цена, ₽/м³">
               <NumberInput
@@ -126,7 +126,7 @@ export function PriceSettingsPanel({ settings, onChange, onSave, saved }: Props)
         </div>
 
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-white">Воздух</h3>
+          <SubsectionTitle>Воздух</SubsectionTitle>
           <Field label="Давление, бар">
             <NumberInput
               step="0.1"
@@ -137,7 +137,7 @@ export function PriceSettingsPanel({ settings, onChange, onSave, saved }: Props)
         </div>
 
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-white">Прочие расходы</h3>
+          <SubsectionTitle>Прочие расходы</SubsectionTitle>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Field label="Амортизация, ₽/час">
               <NumberInput
@@ -166,9 +166,7 @@ export function PriceSettingsPanel({ settings, onChange, onSave, saved }: Props)
         </div>
 
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-white">
-            Коэффициент стоимости по металлам
-          </h3>
+          <SubsectionTitle>Коэффициент стоимости по металлам</SubsectionTitle>
           <MetalCoefficientsEditor
             thin={settings.thinCoeffs}
             medium={settings.mediumCoeffs}
@@ -179,7 +177,11 @@ export function PriceSettingsPanel({ settings, onChange, onSave, saved }: Props)
 
         <div className="flex flex-wrap items-center gap-3">
           <Button onClick={onSave}>Сохранить настройки</Button>
-          {saved && <span className="text-sm text-emerald-400">Сохранено</span>}
+          {saved && (
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-600">
+              Сохранено
+            </span>
+          )}
         </div>
       </div>
     </Section>
