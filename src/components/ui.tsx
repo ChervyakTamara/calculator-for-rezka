@@ -85,18 +85,21 @@ export function Card({
   title,
   children,
   className = '',
+  actions,
 }: {
   title?: string
   children: ReactNode
   className?: string
+  actions?: ReactNode
 }) {
   return (
     <section className={`border border-neutral-400 bg-white ${className}`}>
       {title && (
-        <div className="border-b border-neutral-300 bg-neutral-100 px-4 py-2.5">
+        <div className="flex items-center justify-between gap-3 border-b border-neutral-300 bg-neutral-100 px-4 py-2.5">
           <h2 className="text-[11px] font-semibold uppercase tracking-wider text-neutral-800">
             {title}
           </h2>
+          {actions}
         </div>
       )}
       <div className="p-4">{children}</div>

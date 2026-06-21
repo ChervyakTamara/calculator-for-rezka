@@ -4,6 +4,7 @@ import { calculateJob, formatMoney, formatNumber, formatTime } from '../lib/calc
 import { GAS_LABELS, MATERIAL_LABELS } from '../lib/defaults'
 import type { PriceSettings } from '../types'
 import { encodeShareState } from '../lib/storage'
+import { downloadCalculationPdf } from '../lib/exportPdf'
 import { PriceSettingsPanel } from './PriceSettingsPanel'
 import {
   Button,
@@ -45,6 +46,7 @@ export function CalculatorApp({
   const [metalName, setMetalName] = useState('')
   const [selectedPriceId, setSelectedPriceId] = useState('')
   const [shareCopied, setShareCopied] = useState(false)
+  const [pdfLoading, setPdfLoading] = useState(false)
 
   const result = useMemo(() => calculateJob(job, settings), [job, settings])
 
@@ -76,6 +78,17 @@ export function CalculatorApp({
         'Android (Chrome): меню → «Установить приложение»\n' +
         'iPhone (Safari): Поделиться → «На экран Домой»',
     )
+  }
+
+  const handleDownloadPdf = async () => {
+    setPdfLoading(true)
+    try {
+      await downloadCalculationPdf(job, settings, result)
+    } catch {
+      alert('Не удалось сформировать PDF. Попробуйте ещё раз.')
+    } finally {
+      setPdfLoading(false)
+    }
   }
 
   return (
@@ -286,7 +299,15 @@ export function CalculatorApp({
           />
         </div>
 
-        <Card title="Расчёт лазерной резки" className="mt-4">
+        <Card
+          title="Расчёт лазерной резки"
+          className="mt-4"
+          actions={
+            <Button variant="secondary" disabled={pdfLoading} onClick={handleDownloadPdf}>
+              {pdfLoading ? 'Формирование…' : 'PDF'}
+            </Button>
+          }
+        >
           <ResultTable>
             <ResultRow label="Газ (расчётный)" value={GAS_LABELS[result.resolvedGas]} />
             <ResultRow
