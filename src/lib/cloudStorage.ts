@@ -1,8 +1,25 @@
 import type { PostgrestError } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import type { PriceSettings, SavedMetalPrice } from '../types'
-import { isCloudStorageEnabled, supabase } from './supabase'
+
+const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
+const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+
+export const isCloudStorageEnabled = Boolean(url && anonKey)
 
 const SETTINGS_ID = 'main'
+
+let clientPromise: Promise<SupabaseClient | null> | null = null
+
+async function getClient(): Promise<SupabaseClient | null> {
+  if (!isCloudStorageEnabled) return null
+  if (!clientPromise) {
+    clientPromise = import('@supabase/supabase-js').then(({ createClient }) =>
+      createClient(url!, anonKey!),
+    )
+  }
+  return clientPromise
+}
 
 export interface SharedSettingsData {
   settings: PriceSettings
@@ -22,25 +39,11 @@ export function formatDbError(error: unknown): string {
   if (pg.code === '42501') {
     return 'Нет прав на запись. Перезапустите schema.sql (раздел GRANT).'
   }
-  if (pg.code === 'PGRST116') {
-    return 'Запись не найдена в базе.'
-  }
 
   return msg
 }
 
-function assertSupabase() {
-  if (!supabase) {
-    throw new Error(
-      'Облако не подключено. Добавьте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY на Vercel.',
-    )
-  }
-  return supabase
-}
-
-async function ensureRow(): Promise<void> {
-  const client = assertSupabase()
-
+async function ensureRow(client: SupabaseClient): Promise<void> {
   const { data, error: readError } = await client
     .from('app_settings')
     .select('id')
@@ -60,9 +63,10 @@ async function ensureRow(): Promise<void> {
 }
 
 export async function loadSharedSettings(): Promise<SharedSettingsData | null> {
-  if (!supabase) return null
+  const client = await getClient()
+  if (!client) return null
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from('app_settings')
     .select('settings, metal_prices, updated_at')
     .eq('id', SETTINGS_ID)
@@ -79,8 +83,12 @@ export async function loadSharedSettings(): Promise<SharedSettingsData | null> {
 }
 
 export async function saveSharedPriceSettings(settings: PriceSettings): Promise<void> {
-  const client = assertSupabase()
-  await ensureRow()
+  const client = await getClient()
+  if (!client) {
+    throw new Error('Облако не подключено')
+  }
+
+  await ensureRow(client)
 
   const { error } = await client
     .from('app_settings')
@@ -94,8 +102,12 @@ export async function saveSharedPriceSettings(settings: PriceSettings): Promise<
 }
 
 export async function saveSharedMetalPrices(metalPrices: SavedMetalPrice[]): Promise<void> {
-  const client = assertSupabase()
-  await ensureRow()
+  const client = await getClient()
+  if (!client) {
+    throw new Error('Облако не подключено')
+  }
+
+  await ensureRow(client)
 
   const { error } = await client
     .from('app_settings')
@@ -107,5 +119,3 @@ export async function saveSharedMetalPrices(metalPrices: SavedMetalPrice[]): Pro
 
   if (error) throw error
 }
-
-export { isCloudStorageEnabled }

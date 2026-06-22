@@ -31,6 +31,7 @@ interface Props {
   cloudConnected?: boolean
   onSaveMetalPrice: (name: string) => void | Promise<void>
   savingMetal?: boolean
+  deletingMetal?: boolean
   metalSaveMessage?: string | null
   metalSaveError?: string | null
   onDeleteSavedPrice: (id: string) => void | Promise<void>
@@ -50,6 +51,7 @@ export function CalculatorApp({
   cloudConnected = false,
   onSaveMetalPrice,
   savingMetal = false,
+  deletingMetal = false,
   metalSaveMessage = null,
   metalSaveError = null,
   onDeleteSavedPrice,
@@ -287,15 +289,14 @@ export function CalculatorApp({
                   </SelectInput>
                   <Button
                     variant="danger"
-                    disabled={!selectedPriceId}
-                    onClick={() => {
-                      if (selectedPriceId) {
-                        void onDeleteSavedPrice(selectedPriceId)
-                        setSelectedPriceId('')
-                      }
+                    disabled={!selectedPriceId || deletingMetal}
+                    onClick={async () => {
+                      if (!selectedPriceId) return
+                      await onDeleteSavedPrice(selectedPriceId)
+                      setSelectedPriceId('')
                     }}
                   >
-                    Удал.
+                    {deletingMetal ? '…' : 'Удал.'}
                   </Button>
                 </div>
                 {metalSaveMessage && (

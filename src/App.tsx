@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { JobInput, PriceSettings, SavedMetalPrice } from './types'
 import { CalculatorApp } from './components/CalculatorApp'
 import {
@@ -19,15 +19,17 @@ import {
   saveSettings,
 } from './lib/storage'
 
+const SYNC_INTERVAL_MS = 60_000
+
 function App() {
   const sharedCalc = new URLSearchParams(window.location.search).get('calc')
 
-  const [ready, setReady] = useState(false)
   const [savingSettings, setSavingSettings] = useState(false)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
 
   const [savingMetal, setSavingMetal] = useState(false)
+  const [deletingMetal, setDeletingMetal] = useState(false)
   const [metalMessage, setMetalMessage] = useState<string | null>(null)
   const [metalError, setMetalError] = useState<string | null>(null)
 
@@ -39,6 +41,8 @@ function App() {
   const [savedPrices, setSavedPrices] = useState<SavedMetalPrice[]>(loadSavedPrices)
 
   const cloudEnabled = isCloudStorageEnabled
+  const lastSyncRef = useRef(0)
+  const syncingRef = useRef(false)
 
   const applySharedSettings = useCallback((data: Awaited<ReturnType<typeof loadSharedSettings>>) => {
     if (!data) return
@@ -46,48 +50,39 @@ function App() {
     setSavedPrices(data.metalPrices)
     saveSettings({ ...DEFAULT_SETTINGS, ...data.settings })
     saveSavedPrices(data.metalPrices)
+    lastSyncRef.current = Date.now()
   }, [])
 
-  useEffect(() => {
-    let cancelled = false
+  const syncFromCloud = useCallback(async () => {
+    if (!cloudEnabled || syncingRef.current) return
 
-    async function init() {
-      if (!cloudEnabled) {
-        if (!cancelled) setReady(true)
-        return
-      }
-
-      try {
-        const data = await loadSharedSettings()
-        if (!cancelled && data) applySharedSettings(data)
-      } catch {
-        /* локальная копия уже загружена */
-      } finally {
-        if (!cancelled) setReady(true)
-      }
-    }
-
-    init()
-    return () => {
-      cancelled = true
+    syncingRef.current = true
+    try {
+      const data = await loadSharedSettings()
+      applySharedSettings(data)
+    } catch {
+      /* оставляем локальную копию */
+    } finally {
+      syncingRef.current = false
     }
   }, [cloudEnabled, applySharedSettings])
 
   useEffect(() => {
-    if (!cloudEnabled || !ready) return
+    void syncFromCloud()
+  }, [syncFromCloud])
 
-    const refresh = async () => {
-      try {
-        const data = await loadSharedSettings()
-        applySharedSettings(data)
-      } catch {
-        /* ignore */
-      }
+  useEffect(() => {
+    if (!cloudEnabled) return
+
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return
+      if (Date.now() - lastSyncRef.current < SYNC_INTERVAL_MS) return
+      void syncFromCloud()
     }
 
-    window.addEventListener('focus', refresh)
-    return () => window.removeEventListener('focus', refresh)
-  }, [cloudEnabled, ready, applySharedSettings])
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [cloudEnabled, syncFromCloud])
 
   useEffect(() => {
     saveJob(job)
@@ -106,6 +101,7 @@ function App() {
     setSavingSettings(true)
     try {
       await saveSharedPriceSettings(settings)
+      lastSyncRef.current = Date.now()
       setSaveMessage('Настройки сохранены · видны на всех устройствах')
       setTimeout(() => setSaveMessage(null), 4000)
     } catch (err) {
@@ -116,6 +112,7 @@ function App() {
   }
 
   const handleSaveMetalPrice = async (name: string) => {
+    const previous = savedPrices
     const entry: SavedMetalPrice = {
       id: crypto.randomUUID(),
       name,
@@ -137,9 +134,12 @@ function App() {
     setSavingMetal(true)
     try {
       await saveSharedMetalPrices(next)
+      lastSyncRef.current = Date.now()
       setMetalMessage('Металл сохранён · виден на всех устройствах')
       setTimeout(() => setMetalMessage(null), 4000)
     } catch (err) {
+      setSavedPrices(previous)
+      saveSavedPrices(previous)
       setMetalError(formatDbError(err))
     } finally {
       setSavingMetal(false)
@@ -147,28 +147,32 @@ function App() {
   }
 
   const handleDeleteSavedPrice = async (id: string) => {
-    const next = savedPrices.filter((p) => p.id !== id)
+    const previous = savedPrices
+    const next = previous.filter((p) => p.id !== id)
+
     setSavedPrices(next)
     saveSavedPrices(next)
     setMetalError(null)
 
-    if (!cloudEnabled) return
+    if (!cloudEnabled) {
+      setMetalMessage('Металл удалён')
+      setTimeout(() => setMetalMessage(null), 3000)
+      return
+    }
 
+    setDeletingMetal(true)
     try {
       await saveSharedMetalPrices(next)
-      setMetalMessage('Список металлов обновлён')
+      lastSyncRef.current = Date.now()
+      setMetalMessage('Металл удалён')
       setTimeout(() => setMetalMessage(null), 3000)
     } catch (err) {
+      setSavedPrices(previous)
+      saveSavedPrices(previous)
       setMetalError(formatDbError(err))
+    } finally {
+      setDeletingMetal(false)
     }
-  }
-
-  if (!ready) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-neutral-200 text-sm uppercase tracking-wider text-neutral-600">
-        Загрузка…
-      </div>
-    )
   }
 
   return (
@@ -185,6 +189,7 @@ function App() {
       cloudConnected={cloudEnabled}
       onSaveMetalPrice={handleSaveMetalPrice}
       savingMetal={savingMetal}
+      deletingMetal={deletingMetal}
       metalSaveMessage={metalMessage}
       metalSaveError={metalError}
       onDeleteSavedPrice={handleDeleteSavedPrice}
