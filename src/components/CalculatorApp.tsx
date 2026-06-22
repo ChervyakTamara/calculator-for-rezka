@@ -24,7 +24,10 @@ interface Props {
   savedPrices: SavedMetalPrice[]
   onJobChange: (job: JobInput) => void
   onSettingsChange: (settings: PriceSettings) => void
-  onSaveSettings: () => void
+  onSaveSettings: () => void | Promise<void>
+  savingSettings?: boolean
+  saveSettingsMessage?: string | null
+  saveSettingsError?: string | null
   onSaveMetalPrice: (name: string) => void
   onDeleteSavedPrice: (id: string) => void
   onApplySavedPrice: (price: SavedMetalPrice) => void
@@ -37,11 +40,13 @@ export function CalculatorApp({
   onJobChange,
   onSettingsChange,
   onSaveSettings,
+  savingSettings = false,
+  saveSettingsMessage = null,
+  saveSettingsError = null,
   onSaveMetalPrice,
   onDeleteSavedPrice,
   onApplySavedPrice,
 }: Props) {
-  const [settingsSaved, setSettingsSaved] = useState(false)
   const [showSaveModal, setShowSaveModal] = useState(false)
   const [metalName, setMetalName] = useState('')
   const [selectedPriceId, setSelectedPriceId] = useState('')
@@ -55,9 +60,7 @@ export function CalculatorApp({
   }
 
   const handleSaveSettings = () => {
-    onSaveSettings()
-    setSettingsSaved(true)
-    setTimeout(() => setSettingsSaved(false), 2000)
+    void onSaveSettings()
   }
 
   const handleShare = async () => {
@@ -295,7 +298,9 @@ export function CalculatorApp({
             settings={settings}
             onChange={onSettingsChange}
             onSave={handleSaveSettings}
-            saved={settingsSaved}
+            saving={savingSettings}
+            message={saveSettingsMessage}
+            error={saveSettingsError}
           />
         </div>
 
@@ -342,9 +347,7 @@ export function CalculatorApp({
         </Card>
       </main>
 
-      <footer className="border-t border-neutral-400 bg-neutral-200 px-4 py-2 text-center text-[10px] uppercase tracking-wider text-neutral-500 sm:px-6">
-        Офлайн · локальное хранение настроек
-      </footer>
+      <footer className="hidden" aria-hidden />
 
       {showSaveModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">

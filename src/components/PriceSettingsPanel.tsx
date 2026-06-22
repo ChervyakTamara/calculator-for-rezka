@@ -6,10 +6,19 @@ interface Props {
   settings: PriceSettings
   onChange: (settings: PriceSettings) => void
   onSave: () => void
-  saved: boolean
+  saving?: boolean
+  message?: string | null
+  error?: string | null
 }
 
-export function PriceSettingsPanel({ settings, onChange, onSave, saved }: Props) {
+export function PriceSettingsPanel({
+  settings,
+  onChange,
+  onSave,
+  saving = false,
+  message = null,
+  error = null,
+}: Props) {
   const update = <K extends keyof PriceSettings>(key: K, value: PriceSettings[K]) => {
     onChange({ ...settings, [key]: value })
   }
@@ -176,10 +185,17 @@ export function PriceSettingsPanel({ settings, onChange, onSave, saved }: Props)
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button onClick={onSave}>Сохранить настройки</Button>
-          {saved && (
+          <Button onClick={onSave} disabled={saving}>
+            {saving ? 'Сохранение…' : 'Сохранить настройки'}
+          </Button>
+          {message && (
             <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-600">
-              Сохранено
+              {message}
+            </span>
+          )}
+          {error && (
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-red-700">
+              {error}
             </span>
           )}
         </div>
