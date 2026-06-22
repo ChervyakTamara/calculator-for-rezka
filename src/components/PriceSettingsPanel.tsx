@@ -9,6 +9,7 @@ interface Props {
   saving?: boolean
   message?: string | null
   error?: string | null
+  cloudConnected?: boolean
 }
 
 export function PriceSettingsPanel({
@@ -18,6 +19,7 @@ export function PriceSettingsPanel({
   saving = false,
   message = null,
   error = null,
+  cloudConnected = false,
 }: Props) {
   const update = <K extends keyof PriceSettings>(key: K, value: PriceSettings[K]) => {
     onChange({ ...settings, [key]: value })
@@ -188,6 +190,15 @@ export function PriceSettingsPanel({
           <Button onClick={onSave} disabled={saving}>
             {saving ? 'Сохранение…' : 'Сохранить настройки'}
           </Button>
+          {cloudConnected ? (
+            <span className="text-[10px] uppercase tracking-wider text-neutral-500">
+              Облако подключено
+            </span>
+          ) : (
+            <span className="text-[10px] uppercase tracking-wider text-amber-700">
+              Облако не подключено
+            </span>
+          )}
           {message && (
             <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-600">
               {message}

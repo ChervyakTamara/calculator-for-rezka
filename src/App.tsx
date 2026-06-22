@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { JobInput, PriceSettings, SavedMetalPrice } from './types'
 import { CalculatorApp } from './components/CalculatorApp'
 import {
+  formatDbError,
   isCloudStorageEnabled,
   loadSharedSettings,
   saveSharedSettings,
@@ -95,8 +96,8 @@ function App() {
     setSaveError(null)
 
     if (!cloudEnabled) {
-      setSaveMessage('Сохранено на этом устройстве')
-      setTimeout(() => setSaveMessage(null), 3000)
+      setSaveMessage('Только на этом устройстве (облако не подключено)')
+      setTimeout(() => setSaveMessage(null), 4000)
       return
     }
 
@@ -105,8 +106,8 @@ function App() {
       await saveSharedSettings(settings, savedPrices)
       setSaveMessage('Сохранено · видно на всех устройствах')
       setTimeout(() => setSaveMessage(null), 4000)
-    } catch {
-      setSaveError('Не удалось сохранить. Проверьте интернет.')
+    } catch (err) {
+      setSaveError(formatDbError(err))
     } finally {
       setSavingSettings(false)
     }
@@ -131,6 +132,7 @@ function App() {
       savingSettings={savingSettings}
       saveSettingsMessage={saveMessage}
       saveSettingsError={saveError}
+      cloudConnected={cloudEnabled}
       onSaveMetalPrice={(name) => {
         setSavedPrices((prev) => [
           ...prev,

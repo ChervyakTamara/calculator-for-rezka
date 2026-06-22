@@ -28,6 +28,7 @@ interface Props {
   savingSettings?: boolean
   saveSettingsMessage?: string | null
   saveSettingsError?: string | null
+  cloudConnected?: boolean
   onSaveMetalPrice: (name: string) => void
   onDeleteSavedPrice: (id: string) => void
   onApplySavedPrice: (price: SavedMetalPrice) => void
@@ -43,6 +44,7 @@ export function CalculatorApp({
   savingSettings = false,
   saveSettingsMessage = null,
   saveSettingsError = null,
+  cloudConnected = false,
   onSaveMetalPrice,
   onDeleteSavedPrice,
   onApplySavedPrice,
@@ -301,6 +303,7 @@ export function CalculatorApp({
             saving={savingSettings}
             message={saveSettingsMessage}
             error={saveSettingsError}
+            cloudConnected={cloudConnected}
           />
         </div>
 

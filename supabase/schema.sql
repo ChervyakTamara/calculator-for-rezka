@@ -1,16 +1,35 @@
-create table if not exists app_settings (
-  id text primary key default 'main',
-  settings jsonb not null default '{}',
-  metal_prices jsonb not null default '[]',
+-- Запустите целиком в Supabase → SQL Editor → Run
+-- (ошибка schema_migrations в логах — это служебная, не мешает этому скрипту)
+
+create table if not exists public.app_settings (
+  id text primary key,
+  settings jsonb not null default '{}'::jsonb,
+  metal_prices jsonb not null default '[]'::jsonb,
   updated_at timestamptz not null default now()
 );
 
-insert into app_settings (id, settings, metal_prices)
-values ('main', '{}', '[]')
+insert into public.app_settings (id, settings, metal_prices)
+values ('main', '{}'::jsonb, '[]'::jsonb)
 on conflict (id) do nothing;
 
-alter table app_settings enable row level security;
+alter table public.app_settings enable row level security;
 
-create policy "anon_select" on app_settings for select to anon using (true);
-create policy "anon_insert" on app_settings for insert to anon with check (true);
-create policy "anon_update" on app_settings for update to anon using (true);
+drop policy if exists "app_settings_select" on public.app_settings;
+drop policy if exists "app_settings_insert" on public.app_settings;
+drop policy if exists "app_settings_update" on public.app_settings;
+
+create policy "app_settings_select"
+  on public.app_settings for select to anon, authenticated
+  using (true);
+
+create policy "app_settings_insert"
+  on public.app_settings for insert to anon, authenticated
+  with check (true);
+
+create policy "app_settings_update"
+  on public.app_settings for update to anon, authenticated
+  using (true)
+  with check (true);
+
+grant usage on schema public to anon, authenticated;
+grant select, insert, update on public.app_settings to anon, authenticated;
