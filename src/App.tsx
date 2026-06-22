@@ -5,7 +5,8 @@ import {
   formatDbError,
   isCloudStorageEnabled,
   loadSharedSettings,
-  saveSharedSettings,
+  saveSharedMetalPrices,
+  saveSharedPriceSettings,
 } from './lib/cloudStorage'
 import { DEFAULT_SETTINGS } from './lib/defaults'
 import {
@@ -26,6 +27,10 @@ function App() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
 
+  const [savingMetal, setSavingMetal] = useState(false)
+  const [metalMessage, setMetalMessage] = useState<string | null>(null)
+  const [metalError, setMetalError] = useState<string | null>(null)
+
   const [job, setJob] = useState<JobInput>(() => {
     const decoded = sharedCalc ? decodeShareState(sharedCalc) : null
     return decoded ?? loadJob()
@@ -39,6 +44,8 @@ function App() {
     if (!data) return
     setSettings({ ...DEFAULT_SETTINGS, ...data.settings })
     setSavedPrices(data.metalPrices)
+    saveSettings({ ...DEFAULT_SETTINGS, ...data.settings })
+    saveSavedPrices(data.metalPrices)
   }, [])
 
   useEffect(() => {
@@ -86,13 +93,8 @@ function App() {
     saveJob(job)
   }, [job])
 
-  useEffect(() => {
-    saveSavedPrices(savedPrices)
-  }, [savedPrices])
-
   const handleSaveSettings = async () => {
     saveSettings(settings)
-    saveSavedPrices(savedPrices)
     setSaveError(null)
 
     if (!cloudEnabled) {
@@ -103,13 +105,61 @@ function App() {
 
     setSavingSettings(true)
     try {
-      await saveSharedSettings(settings, savedPrices)
-      setSaveMessage('Сохранено · видно на всех устройствах')
+      await saveSharedPriceSettings(settings)
+      setSaveMessage('Настройки сохранены · видны на всех устройствах')
       setTimeout(() => setSaveMessage(null), 4000)
     } catch (err) {
       setSaveError(formatDbError(err))
     } finally {
       setSavingSettings(false)
+    }
+  }
+
+  const handleSaveMetalPrice = async (name: string) => {
+    const entry: SavedMetalPrice = {
+      id: crypto.randomUUID(),
+      name,
+      price: job.metalPricePerM2,
+      material: job.material,
+      createdAt: Date.now(),
+    }
+    const next = [...savedPrices, entry]
+    setSavedPrices(next)
+    saveSavedPrices(next)
+    setMetalError(null)
+
+    if (!cloudEnabled) {
+      setMetalMessage('Металл сохранён на этом устройстве')
+      setTimeout(() => setMetalMessage(null), 4000)
+      return
+    }
+
+    setSavingMetal(true)
+    try {
+      await saveSharedMetalPrices(next)
+      setMetalMessage('Металл сохранён · виден на всех устройствах')
+      setTimeout(() => setMetalMessage(null), 4000)
+    } catch (err) {
+      setMetalError(formatDbError(err))
+    } finally {
+      setSavingMetal(false)
+    }
+  }
+
+  const handleDeleteSavedPrice = async (id: string) => {
+    const next = savedPrices.filter((p) => p.id !== id)
+    setSavedPrices(next)
+    saveSavedPrices(next)
+    setMetalError(null)
+
+    if (!cloudEnabled) return
+
+    try {
+      await saveSharedMetalPrices(next)
+      setMetalMessage('Список металлов обновлён')
+      setTimeout(() => setMetalMessage(null), 3000)
+    } catch (err) {
+      setMetalError(formatDbError(err))
     }
   }
 
@@ -133,19 +183,11 @@ function App() {
       saveSettingsMessage={saveMessage}
       saveSettingsError={saveError}
       cloudConnected={cloudEnabled}
-      onSaveMetalPrice={(name) => {
-        setSavedPrices((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            name,
-            price: job.metalPricePerM2,
-            material: job.material,
-            createdAt: Date.now(),
-          },
-        ])
-      }}
-      onDeleteSavedPrice={(id) => setSavedPrices((prev) => prev.filter((p) => p.id !== id))}
+      onSaveMetalPrice={handleSaveMetalPrice}
+      savingMetal={savingMetal}
+      metalSaveMessage={metalMessage}
+      metalSaveError={metalError}
+      onDeleteSavedPrice={handleDeleteSavedPrice}
       onApplySavedPrice={(price) => {
         setJob((prev) => ({
           ...prev,

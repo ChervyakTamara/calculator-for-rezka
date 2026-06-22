@@ -29,6 +29,36 @@ export function formatDbError(error: unknown): string {
   return msg
 }
 
+function assertSupabase() {
+  if (!supabase) {
+    throw new Error(
+      'Облако не подключено. Добавьте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY на Vercel.',
+    )
+  }
+  return supabase
+}
+
+async function ensureRow(): Promise<void> {
+  const client = assertSupabase()
+
+  const { data, error: readError } = await client
+    .from('app_settings')
+    .select('id')
+    .eq('id', SETTINGS_ID)
+    .maybeSingle()
+
+  if (readError) throw readError
+  if (data) return
+
+  const { error: insertError } = await client.from('app_settings').insert({
+    id: SETTINGS_ID,
+    settings: {},
+    metal_prices: [],
+  })
+
+  if (insertError) throw insertError
+}
+
 export async function loadSharedSettings(): Promise<SharedSettingsData | null> {
   if (!supabase) return null
 
@@ -48,46 +78,34 @@ export async function loadSharedSettings(): Promise<SharedSettingsData | null> {
   }
 }
 
-export async function saveSharedSettings(
-  settings: PriceSettings,
-  metalPrices: SavedMetalPrice[],
-): Promise<void> {
-  if (!supabase) {
-    throw new Error(
-      'Облако не подключено. Добавьте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY на Vercel.',
-    )
-  }
+export async function saveSharedPriceSettings(settings: PriceSettings): Promise<void> {
+  const client = assertSupabase()
+  await ensureRow()
 
-  const payload = {
-    settings,
-    metal_prices: metalPrices,
-    updated_at: new Date().toISOString(),
-  }
-
-  const { data: existing, error: readError } = await supabase
+  const { error } = await client
     .from('app_settings')
-    .select('id')
+    .update({
+      settings,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', SETTINGS_ID)
-    .maybeSingle()
 
-  if (readError) throw readError
+  if (error) throw error
+}
 
-  if (existing) {
-    const { error } = await supabase
-      .from('app_settings')
-      .update(payload)
-      .eq('id', SETTINGS_ID)
+export async function saveSharedMetalPrices(metalPrices: SavedMetalPrice[]): Promise<void> {
+  const client = assertSupabase()
+  await ensureRow()
 
-    if (error) throw error
-    return
-  }
+  const { error } = await client
+    .from('app_settings')
+    .update({
+      metal_prices: metalPrices,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', SETTINGS_ID)
 
-  const { error: insertError } = await supabase.from('app_settings').insert({
-    id: SETTINGS_ID,
-    ...payload,
-  })
-
-  if (insertError) throw insertError
+  if (error) throw error
 }
 
 export { isCloudStorageEnabled }

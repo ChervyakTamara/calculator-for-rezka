@@ -29,8 +29,11 @@ interface Props {
   saveSettingsMessage?: string | null
   saveSettingsError?: string | null
   cloudConnected?: boolean
-  onSaveMetalPrice: (name: string) => void
-  onDeleteSavedPrice: (id: string) => void
+  onSaveMetalPrice: (name: string) => void | Promise<void>
+  savingMetal?: boolean
+  metalSaveMessage?: string | null
+  metalSaveError?: string | null
+  onDeleteSavedPrice: (id: string) => void | Promise<void>
   onApplySavedPrice: (price: SavedMetalPrice) => void
 }
 
@@ -46,6 +49,9 @@ export function CalculatorApp({
   saveSettingsError = null,
   cloudConnected = false,
   onSaveMetalPrice,
+  savingMetal = false,
+  metalSaveMessage = null,
+  metalSaveError = null,
   onDeleteSavedPrice,
   onApplySavedPrice,
 }: Props) {
@@ -261,35 +267,47 @@ export function CalculatorApp({
             </Field>
 
             <Field label="Сохранённые цены">
-              <div className="flex gap-2">
-                <SelectInput
-                  value={selectedPriceId}
-                  onChange={(e) => {
-                    const id = e.target.value
-                    setSelectedPriceId(id)
-                    const found = savedPrices.find((p) => p.id === id)
-                    if (found) onApplySavedPrice(found)
-                  }}
-                >
-                  <option value="">— выбрать —</option>
-                  {savedPrices.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({formatMoney(p.price)})
-                    </option>
-                  ))}
-                </SelectInput>
-                <Button
-                  variant="danger"
-                  disabled={!selectedPriceId}
-                  onClick={() => {
-                    if (selectedPriceId) {
-                      onDeleteSavedPrice(selectedPriceId)
-                      setSelectedPriceId('')
-                    }
-                  }}
-                >
-                  Удал.
-                </Button>
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <SelectInput
+                    value={selectedPriceId}
+                    onChange={(e) => {
+                      const id = e.target.value
+                      setSelectedPriceId(id)
+                      const found = savedPrices.find((p) => p.id === id)
+                      if (found) onApplySavedPrice(found)
+                    }}
+                  >
+                    <option value="">— выбрать —</option>
+                    {savedPrices.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({formatMoney(p.price)})
+                      </option>
+                    ))}
+                  </SelectInput>
+                  <Button
+                    variant="danger"
+                    disabled={!selectedPriceId}
+                    onClick={() => {
+                      if (selectedPriceId) {
+                        void onDeleteSavedPrice(selectedPriceId)
+                        setSelectedPriceId('')
+                      }
+                    }}
+                  >
+                    Удал.
+                  </Button>
+                </div>
+                {metalSaveMessage && (
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-600">
+                    {metalSaveMessage}
+                  </span>
+                )}
+                {metalSaveError && (
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-red-700">
+                    {metalSaveError}
+                  </span>
+                )}
               </div>
             </Field>
           </FormGrid>
@@ -369,15 +387,16 @@ export function CalculatorApp({
                 Отмена
               </Button>
               <Button
-                onClick={() => {
+                disabled={savingMetal || !metalName.trim()}
+                onClick={async () => {
                   if (metalName.trim()) {
-                    onSaveMetalPrice(metalName.trim())
+                    await onSaveMetalPrice(metalName.trim())
                     setMetalName('')
                     setShowSaveModal(false)
                   }
                 }}
               >
-                Сохранить
+                {savingMetal ? 'Сохранение…' : 'Сохранить'}
               </Button>
             </div>
           </div>
