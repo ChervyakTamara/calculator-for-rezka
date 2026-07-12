@@ -1,25 +1,7 @@
-import type { PostgrestError } from '@supabase/supabase-js'
-import type { SupabaseClient } from '@supabase/supabase-js'
 import type { PriceSettings, SavedMetalPrice } from '../types'
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
-
-export const isCloudStorageEnabled = Boolean(url && anonKey)
-
-const SETTINGS_ID = 'main'
-
-let clientPromise: Promise<SupabaseClient | null> | null = null
-
-async function getClient(): Promise<SupabaseClient | null> {
-  if (!isCloudStorageEnabled) return null
-  if (!clientPromise) {
-    clientPromise = import('@supabase/supabase-js').then(({ createClient }) =>
-      createClient(url!, anonKey!),
-    )
-  }
-  return clientPromise
-}
+/** На Vercel (production) — хранение в Blob; локально — fallback в браузер */
+export const isCloudStorageEnabled = import.meta.env.PROD
 
 export interface SharedSettingsData {
   settings: PriceSettings
@@ -28,94 +10,49 @@ export interface SharedSettingsData {
 }
 
 export function formatDbError(error: unknown): string {
-  if (!error || typeof error !== 'object') return 'Неизвестная ошибка'
-
-  const pg = error as PostgrestError
-  const msg = pg.message ?? pg.details ?? String(error)
-
-  if (msg.includes('app_settings') && msg.includes('does not exist')) {
-    return 'Таблица app_settings не создана. Выполните supabase/schema.sql в SQL Editor.'
+  if (error instanceof Error) return error.message
+  if (error && typeof error === 'object' && 'error' in error) {
+    return String((error as { error: string }).error)
   }
-  if (pg.code === '42501') {
-    return 'Нет прав на запись. Перезапустите schema.sql (раздел GRANT).'
-  }
-
-  return msg
+  return 'Неизвестная ошибка'
 }
 
-async function ensureRow(client: SupabaseClient): Promise<void> {
-  const { data, error: readError } = await client
-    .from('app_settings')
-    .select('id')
-    .eq('id', SETTINGS_ID)
-    .maybeSingle()
+async function parseError(response: Response): Promise<never> {
+  const body = await response.json().catch(() => ({ error: response.statusText }))
+  throw new Error(body.error || response.statusText)
+}
 
-  if (readError) throw readError
-  if (data) return
-
-  const { error: insertError } = await client.from('app_settings').insert({
-    id: SETTINGS_ID,
-    settings: {},
-    metal_prices: [],
+async function patchStorage(
+  partial: Partial<{ settings: PriceSettings; metalPrices: SavedMetalPrice[] }>,
+): Promise<void> {
+  const response = await fetch('/api/settings', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(partial),
   })
 
-  if (insertError) throw insertError
+  if (!response.ok) await parseError(response)
 }
 
 export async function loadSharedSettings(): Promise<SharedSettingsData | null> {
-  const client = await getClient()
-  if (!client) return null
+  const response = await fetch('/api/settings', { cache: 'no-store' })
+  if (!response.ok) await parseError(response)
 
-  const { data, error } = await client
-    .from('app_settings')
-    .select('settings, metal_prices, updated_at')
-    .eq('id', SETTINGS_ID)
-    .maybeSingle()
+  const data = await response.json()
 
-  if (error) throw error
-  if (!data) return null
+  if (!data.updatedAt) return null
 
   return {
     settings: data.settings as PriceSettings,
-    metalPrices: (data.metal_prices as SavedMetalPrice[]) ?? [],
-    updatedAt: data.updated_at as string | undefined,
+    metalPrices: (data.metalPrices as SavedMetalPrice[]) ?? [],
+    updatedAt: data.updatedAt as string,
   }
 }
 
 export async function saveSharedPriceSettings(settings: PriceSettings): Promise<void> {
-  const client = await getClient()
-  if (!client) {
-    throw new Error('Облако не подключено')
-  }
-
-  await ensureRow(client)
-
-  const { error } = await client
-    .from('app_settings')
-    .update({
-      settings,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', SETTINGS_ID)
-
-  if (error) throw error
+  await patchStorage({ settings })
 }
 
 export async function saveSharedMetalPrices(metalPrices: SavedMetalPrice[]): Promise<void> {
-  const client = await getClient()
-  if (!client) {
-    throw new Error('Облако не подключено')
-  }
-
-  await ensureRow(client)
-
-  const { error } = await client
-    .from('app_settings')
-    .update({
-      metal_prices: metalPrices,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', SETTINGS_ID)
-
-  if (error) throw error
+  await patchStorage({ metalPrices })
 }

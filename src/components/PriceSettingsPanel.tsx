@@ -192,11 +192,11 @@ export function PriceSettingsPanel({
           </Button>
           {cloudConnected ? (
             <span className="text-[10px] uppercase tracking-wider text-neutral-500">
-              Облако подключено
+              Облако Vercel
             </span>
           ) : (
             <span className="text-[10px] uppercase tracking-wider text-amber-700">
-              Облако не подключено
+              Только на этом устройстве
             </span>
           )}
           {message && (
