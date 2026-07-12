@@ -73,14 +73,30 @@ vercel dev
 
 Без `vercel dev` локально данные сохраняются только в браузере.
 
+### Ошибка «This store does not exist»
+
+Токен `BLOB_READ_WRITE_TOKEN` есть, но он **от старого или удалённого** хранилища.
+
+**Исправление (5 минут):**
+
+1. Vercel → **Storage** — убедитесь, что Blob Store **существует** (не пустой список)
+2. Откройте **этот** Blob → **Settings** → **Tokens**
+3. **Create Token** → **Read/Write** → скопируйте **новый** токен
+4. Проект → **Settings** → **Environment Variables** → **BLOB_READ_WRITE_TOKEN** → **Edit** → вставьте новый токен
+5. **Redeploy**
+6. Проверьте: `/api/health` → должно быть `"blobWorks":true`
+
+Если не помогло — **полный сброс:**
+1. Удалите все переменные `BLOB_*` из проекта
+2. Storage → **Create Database** → **Blob** (новый)
+3. **Connect to Project** + галочка **read-write token**
+4. **Redeploy**
+
 ### Ошибка «Failed to fetch»
 
-1. Откройте в браузере: `https://ваш-сайт.vercel.app/api/health`
-   - Должно быть: `{"ok":true,"blobToken":true,"storeId":true}`
-   - Если `404` или HTML-страница — папка `api/` не задеплоена. Запушьте код на GitHub и **Redeploy**
-   - Если `blobToken:false` — добавьте `BLOB_READ_WRITE_TOKEN` (см. выше)
-2. **Redeploy** после любых изменений переменных
-3. На телефоне: удалите PWA и установите заново (старый кэш)
+1. Откройте: `https://ваш-сайт.vercel.app/api/health`
+   - Должно быть: `{"ok":true,"blobToken":true,"blobWorks":true}`
+   - Если `blobWorks:false` — смотрите `blobError` в ответе
 
 ## Публикация по ссылке (Vercel)
 
