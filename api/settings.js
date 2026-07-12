@@ -1,28 +1,15 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { list, put } from '@vercel/blob'
-import { formatBlobError, getBlobToken } from './blobToken'
-
-export const config = {
-  api: {
-    bodyParser: true,
-  },
-}
+const { list, put } = require('@vercel/blob')
+const { getBlobToken, formatBlobError } = require('./blobToken')
 
 const BLOB_PATH = 'laser-calc/app-data.json'
 
-interface StoredData {
-  settings: Record<string, unknown>
-  metalPrices: unknown[]
-  updatedAt: string | null
-}
-
-const emptyData = (): StoredData => ({
+const emptyData = () => ({
   settings: {},
   metalPrices: [],
   updatedAt: null,
 })
 
-async function readStored(): Promise<StoredData> {
+async function readStored() {
   const token = getBlobToken()
   const { blobs } = await list({ prefix: BLOB_PATH, token })
   const blob = blobs.find((b) => b.pathname === BLOB_PATH)
@@ -34,10 +21,10 @@ async function readStored(): Promise<StoredData> {
     throw new Error('Не удалось прочитать файл настроек')
   }
 
-  return response.json() as Promise<StoredData>
+  return response.json()
 }
 
-async function writeStored(data: StoredData): Promise<void> {
+async function writeStored(data) {
   const token = getBlobToken()
   await put(BLOB_PATH, JSON.stringify(data), {
     access: 'public',
@@ -48,7 +35,7 @@ async function writeStored(data: StoredData): Promise<void> {
   })
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')
 
   if (req.method === 'OPTIONS') {
@@ -63,9 +50,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === 'PATCH') {
       const existing = await readStored()
-      const body = (req.body ?? {}) as Partial<StoredData>
+      const body = req.body ?? {}
 
-      const updated: StoredData = {
+      const updated = {
         settings: body.settings ?? existing.settings,
         metalPrices: body.metalPrices ?? existing.metalPrices,
         updatedAt: new Date().toISOString(),
@@ -81,3 +68,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: formatBlobError(error) })
   }
 }
+
+handler.config = {
+  api: {
+    bodyParser: true,
+  },
+}
+
+module.exports = handler
