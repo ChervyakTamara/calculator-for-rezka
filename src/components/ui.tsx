@@ -10,13 +10,15 @@ interface FieldProps {
 const highlightStyles = {
   red: {
     label: 'text-red-700',
+    wrapper: '',
     input:
       '[&_input]:border-red-500 [&_input]:focus:border-red-700 [&_input]:focus:ring-red-700',
   },
   green: {
-    label: 'text-green-700',
+    label: 'font-bold text-green-800',
+    wrapper: 'border-2 border-green-600 bg-green-200 p-1',
     input:
-      '[&_input]:!border-green-600 [&_input]:!bg-green-50 [&_input]:!text-green-900 [&_input]:focus:!border-green-700 [&_input]:focus:!ring-1 [&_input]:focus:!ring-green-700',
+      '[&_input]:!border-2 [&_input]:!border-green-700 [&_input]:!bg-green-100 [&_input]:!text-base [&_input]:!font-bold [&_input]:!text-green-950 [&_input]:focus:!border-green-800 [&_input]:focus:!ring-2 [&_input]:focus:!ring-green-600',
   },
 } as const
 
@@ -32,7 +34,7 @@ export function Field({ label, children, hint, highlight }: FieldProps) {
       >
         {label}
       </span>
-      <div className={styles?.input}>{children}</div>
+      <div className={`${styles?.wrapper ?? ''} ${styles?.input ?? ''}`.trim()}>{children}</div>
       {hint && <span className="text-[11px] text-neutral-500">{hint}</span>}
     </label>
   )
