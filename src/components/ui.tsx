@@ -16,7 +16,7 @@ const highlightStyles = {
   green: {
     label: 'text-green-700',
     input:
-      '[&_input]:border-green-600 [&_input]:focus:border-green-700 [&_input]:focus:ring-green-700',
+      '[&_input]:!border-green-600 [&_input]:!bg-green-50 [&_input]:!text-green-900 [&_input]:focus:!border-green-700 [&_input]:focus:!ring-1 [&_input]:focus:!ring-green-700',
   },
 } as const
 
