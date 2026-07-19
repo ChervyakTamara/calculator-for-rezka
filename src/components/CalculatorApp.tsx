@@ -182,7 +182,7 @@ export function CalculatorApp({
                 />
               </Field>
 
-              <Field label="Длина реза, мм" highlight>
+              <Field label="Длина реза, мм" highlight="green">
                 <NumberInput
                   step="1"
                   min="0"
@@ -191,7 +191,7 @@ export function CalculatorApp({
                 />
               </Field>
 
-              <Field label="Кол-во врезок" highlight>
+              <Field label="Кол-во врезок" highlight="green">
                 <NumberInput
                   step="1"
                   min="0"
@@ -211,7 +211,7 @@ export function CalculatorApp({
             </div>
 
             <div className="flex flex-col gap-3">
-              <Field label="Длина детали, мм" highlight>
+              <Field label="Длина детали, мм" highlight="red">
                 <NumberInput
                   step="1"
                   min="0"
@@ -220,12 +220,21 @@ export function CalculatorApp({
                 />
               </Field>
 
-              <Field label="Ширина детали, мм" highlight>
+              <Field label="Ширина детали, мм" highlight="red">
                 <NumberInput
                   step="1"
                   min="0"
                   value={job.partWidth || ''}
                   onChange={(e) => update('partWidth', parseFloat(e.target.value) || 0)}
+                />
+              </Field>
+
+              <Field label="Кол-во деталей">
+                <NumberInput
+                  step="1"
+                  min="1"
+                  value={job.partCount || ''}
+                  onChange={(e) => update('partCount', parseInt(e.target.value, 10) || 1)}
                 />
               </Field>
 
@@ -294,15 +303,6 @@ export function CalculatorApp({
                     </span>
                   )}
                 </div>
-              </Field>
-
-              <Field label="Кол-во деталей">
-                <NumberInput
-                  step="1"
-                  min="1"
-                  value={job.partCount || ''}
-                  onChange={(e) => update('partCount', parseInt(e.target.value, 10) || 1)}
-                />
               </Field>
             </div>
           </div>

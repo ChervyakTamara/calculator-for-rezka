@@ -4,28 +4,35 @@ interface FieldProps {
   label: string
   children: ReactNode
   hint?: string
-  highlight?: boolean
+  highlight?: 'red' | 'green'
 }
 
-export function Field({ label, children, hint, highlight = false }: FieldProps) {
+const highlightStyles = {
+  red: {
+    label: 'text-red-700',
+    input:
+      '[&_input]:border-red-500 [&_input]:focus:border-red-700 [&_input]:focus:ring-red-700',
+  },
+  green: {
+    label: 'text-green-700',
+    input:
+      '[&_input]:border-green-600 [&_input]:focus:border-green-700 [&_input]:focus:ring-green-700',
+  },
+} as const
+
+export function Field({ label, children, hint, highlight }: FieldProps) {
+  const styles = highlight ? highlightStyles[highlight] : null
+
   return (
     <label className="flex flex-col gap-1">
       <span
         className={`text-[11px] font-semibold uppercase tracking-wider ${
-          highlight ? 'text-red-700' : 'text-neutral-600'
+          styles?.label ?? 'text-neutral-600'
         }`}
       >
         {label}
       </span>
-      <div
-        className={
-          highlight
-            ? '[&_input]:border-red-500 [&_input]:focus:border-red-700 [&_input]:focus:ring-red-700'
-            : undefined
-        }
-      >
-        {children}
-      </div>
+      <div className={styles?.input}>{children}</div>
       {hint && <span className="text-[11px] text-neutral-500">{hint}</span>}
     </label>
   )
