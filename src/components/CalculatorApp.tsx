@@ -10,7 +10,6 @@ import {
   Button,
   Card,
   Field,
-  FormGrid,
   NumberInput,
   ResultRow,
   ResultTable,
@@ -137,181 +136,176 @@ export function CalculatorApp({
 
       <main className="flex flex-col gap-px bg-neutral-400 p-px sm:gap-0 sm:bg-neutral-400 sm:p-4 sm:pt-5">
         <Card title="Параметры заказа">
-          <FormGrid>
-            <Field label="Материал">
-              <SelectInput
-                value={job.material}
-                onChange={(e) => update('material', e.target.value as JobInput['material'])}
-              >
-                {Object.entries(MATERIAL_LABELS).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              </SelectInput>
-            </Field>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-3">
+              <Field label="Материал">
+                <SelectInput
+                  value={job.material}
+                  onChange={(e) => update('material', e.target.value as JobInput['material'])}
+                >
+                  {Object.entries(MATERIAL_LABELS).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
 
-            <Field label="Толщина, мм">
-              <NumberInput
-                step="0.1"
-                min="0"
-                value={job.thickness || ''}
-                onChange={(e) => update('thickness', parseFloat(e.target.value) || 0)}
-              />
-            </Field>
+              <Field label="Толщина, мм">
+                <NumberInput
+                  step="0.1"
+                  min="0"
+                  value={job.thickness || ''}
+                  onChange={(e) => update('thickness', parseFloat(e.target.value) || 0)}
+                />
+              </Field>
 
-            <Field label="Газ">
-              <SelectInput
-                value={job.gas}
-                onChange={(e) => update('gas', e.target.value as JobInput['gas'])}
-              >
-                {Object.entries(GAS_LABELS).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              </SelectInput>
-            </Field>
+              <Field label="Газ">
+                <SelectInput
+                  value={job.gas}
+                  onChange={(e) => update('gas', e.target.value as JobInput['gas'])}
+                >
+                  {Object.entries(GAS_LABELS).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
 
-            <Field label="Длина реза, мм">
-              <NumberInput
-                step="1"
-                min="0"
-                value={job.cutLength || ''}
-                onChange={(e) => update('cutLength', parseFloat(e.target.value) || 0)}
-              />
-            </Field>
+              <Field label="Скорость реза, м/мин">
+                <NumberInput
+                  step="0.1"
+                  min="0"
+                  value={job.cutSpeed || ''}
+                  onChange={(e) => update('cutSpeed', parseFloat(e.target.value) || 0)}
+                />
+              </Field>
 
-            <Field label="Скорость реза, м/мин">
-              <NumberInput
-                step="0.1"
-                min="0"
-                value={job.cutSpeed || ''}
-                onChange={(e) => update('cutSpeed', parseFloat(e.target.value) || 0)}
-              />
-            </Field>
+              <Field label="Длина реза, мм" highlight>
+                <NumberInput
+                  step="1"
+                  min="0"
+                  value={job.cutLength || ''}
+                  onChange={(e) => update('cutLength', parseFloat(e.target.value) || 0)}
+                />
+              </Field>
 
-            <Field label="Длина детали, мм">
-              <NumberInput
-                step="1"
-                min="0"
-                value={job.partLength || ''}
-                onChange={(e) => update('partLength', parseFloat(e.target.value) || 0)}
-              />
-            </Field>
+              <Field label="Кол-во врезок" highlight>
+                <NumberInput
+                  step="1"
+                  min="0"
+                  value={job.pierceCount || ''}
+                  onChange={(e) => update('pierceCount', parseInt(e.target.value, 10) || 0)}
+                />
+              </Field>
 
-            <Field label="Ширина детали, мм">
-              <NumberInput
-                step="1"
-                min="0"
-                value={job.partWidth || ''}
-                onChange={(e) => update('partWidth', parseFloat(e.target.value) || 0)}
-              />
-            </Field>
+              <Field label="Цена врезки, ₽">
+                <NumberInput
+                  step="1"
+                  min="0"
+                  value={job.piercePrice || ''}
+                  onChange={(e) => update('piercePrice', parseFloat(e.target.value) || 0)}
+                />
+              </Field>
+            </div>
 
-            <Field label="Кол-во врезок">
-              <NumberInput
-                step="1"
-                min="0"
-                value={job.pierceCount || ''}
-                onChange={(e) => update('pierceCount', parseInt(e.target.value, 10) || 0)}
-              />
-            </Field>
+            <div className="flex flex-col gap-3">
+              <Field label="Длина детали, мм" highlight>
+                <NumberInput
+                  step="1"
+                  min="0"
+                  value={job.partLength || ''}
+                  onChange={(e) => update('partLength', parseFloat(e.target.value) || 0)}
+                />
+              </Field>
 
-            <Field label="Кол-во деталей">
-              <NumberInput
-                step="1"
-                min="1"
-                value={job.partCount || ''}
-                onChange={(e) => update('partCount', parseInt(e.target.value, 10) || 1)}
-              />
-            </Field>
+              <Field label="Ширина детали, мм" highlight>
+                <NumberInput
+                  step="1"
+                  min="0"
+                  value={job.partWidth || ''}
+                  onChange={(e) => update('partWidth', parseFloat(e.target.value) || 0)}
+                />
+              </Field>
 
-            <Field label="Цена врезки, ₽">
-              <NumberInput
-                step="1"
-                min="0"
-                value={job.piercePrice || ''}
-                onChange={(e) => update('piercePrice', parseFloat(e.target.value) || 0)}
-              />
-            </Field>
-
-            <Field label="Разработка макета, ₽">
-              <NumberInput
-                step="10"
-                min="0"
-                value={job.layoutPrice || ''}
-                onChange={(e) => update('layoutPrice', parseFloat(e.target.value) || 0)}
-              />
-            </Field>
-
-            <Field label="Коэф. оператора">
-              <NumberInput
-                step="0.1"
-                min="0"
-                value={job.operatorCoef || ''}
-                onChange={(e) => update('operatorCoef', parseFloat(e.target.value) || 0)}
-              />
-            </Field>
-
-            <Field label="Цена металла, ₽/м²">
-              <div className="flex gap-2">
+              <Field label="Разработка макета, ₽">
                 <NumberInput
                   step="10"
                   min="0"
-                  value={job.metalPricePerM2 || ''}
-                  onChange={(e) => update('metalPricePerM2', parseFloat(e.target.value) || 0)}
+                  value={job.layoutPrice || ''}
+                  onChange={(e) => update('layoutPrice', parseFloat(e.target.value) || 0)}
                 />
-                <Button variant="secondary" onClick={() => setShowSaveModal(true)}>
-                  Сохр.
-                </Button>
-              </div>
-            </Field>
+              </Field>
 
-            <Field label="Сохранённые цены">
-              <div className="flex flex-col gap-2">
+              <Field label="Цена материала, ₽/м²">
                 <div className="flex gap-2">
-                  <SelectInput
-                    value={selectedPriceId}
-                    onChange={(e) => {
-                      const id = e.target.value
-                      setSelectedPriceId(id)
-                      const found = savedPrices.find((p) => p.id === id)
-                      if (found) onApplySavedPrice(found)
-                    }}
-                  >
-                    <option value="">— выбрать —</option>
-                    {savedPrices.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({formatMoney(p.price)})
-                      </option>
-                    ))}
-                  </SelectInput>
-                  <Button
-                    variant="danger"
-                    disabled={!selectedPriceId || deletingMetal}
-                    onClick={async () => {
-                      if (!selectedPriceId) return
-                      await onDeleteSavedPrice(selectedPriceId)
-                      setSelectedPriceId('')
-                    }}
-                  >
-                    {deletingMetal ? '…' : 'Удал.'}
+                  <NumberInput
+                    step="10"
+                    min="0"
+                    value={job.metalPricePerM2 || ''}
+                    onChange={(e) => update('metalPricePerM2', parseFloat(e.target.value) || 0)}
+                  />
+                  <Button variant="secondary" onClick={() => setShowSaveModal(true)}>
+                    Сохр.
                   </Button>
                 </div>
-                {metalSaveMessage && (
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-600">
-                    {metalSaveMessage}
-                  </span>
-                )}
-                {metalSaveError && (
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-red-700">
-                    {metalSaveError}
-                  </span>
-                )}
-              </div>
-            </Field>
-          </FormGrid>
+              </Field>
+
+              <Field label="Сохранённые цены">
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <SelectInput
+                      value={selectedPriceId}
+                      onChange={(e) => {
+                        const id = e.target.value
+                        setSelectedPriceId(id)
+                        const found = savedPrices.find((p) => p.id === id)
+                        if (found) onApplySavedPrice(found)
+                      }}
+                    >
+                      <option value="">— выбрать —</option>
+                      {savedPrices.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({formatMoney(p.price)})
+                        </option>
+                      ))}
+                    </SelectInput>
+                    <Button
+                      variant="danger"
+                      disabled={!selectedPriceId || deletingMetal}
+                      onClick={async () => {
+                        if (!selectedPriceId) return
+                        await onDeleteSavedPrice(selectedPriceId)
+                        setSelectedPriceId('')
+                      }}
+                    >
+                      {deletingMetal ? '…' : 'Удал.'}
+                    </Button>
+                  </div>
+                  {metalSaveMessage && (
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-600">
+                      {metalSaveMessage}
+                    </span>
+                  )}
+                  {metalSaveError && (
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-red-700">
+                      {metalSaveError}
+                    </span>
+                  )}
+                </div>
+              </Field>
+
+              <Field label="Кол-во деталей">
+                <NumberInput
+                  step="1"
+                  min="1"
+                  value={job.partCount || ''}
+                  onChange={(e) => update('partCount', parseInt(e.target.value, 10) || 1)}
+                />
+              </Field>
+            </div>
+          </div>
         </Card>
 
         <div className="mt-4">

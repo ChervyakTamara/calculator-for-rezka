@@ -4,15 +4,28 @@ interface FieldProps {
   label: string
   children: ReactNode
   hint?: string
+  highlight?: boolean
 }
 
-export function Field({ label, children, hint }: FieldProps) {
+export function Field({ label, children, hint, highlight = false }: FieldProps) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-600">
+      <span
+        className={`text-[11px] font-semibold uppercase tracking-wider ${
+          highlight ? 'text-red-700' : 'text-neutral-600'
+        }`}
+      >
         {label}
       </span>
-      {children}
+      <div
+        className={
+          highlight
+            ? '[&_input]:border-red-500 [&_input]:focus:border-red-700 [&_input]:focus:ring-red-700'
+            : undefined
+        }
+      >
+        {children}
+      </div>
       {hint && <span className="text-[11px] text-neutral-500">{hint}</span>}
     </label>
   )

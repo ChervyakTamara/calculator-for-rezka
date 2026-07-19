@@ -166,6 +166,14 @@ export function PriceSettingsPanel({
                 onChange={(e) => update('operatorPerHour', parseFloat(e.target.value) || 0)}
               />
             </Field>
+            <Field label="Коэф. оператора">
+              <NumberInput
+                step="0.1"
+                min="0"
+                value={settings.operatorCoef}
+                onChange={(e) => update('operatorCoef', parseFloat(e.target.value) || 0)}
+              />
+            </Field>
             <Field label="Наценка, %">
               <NumberInput
                 step="1"

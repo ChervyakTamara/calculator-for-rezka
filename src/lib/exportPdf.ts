@@ -62,7 +62,7 @@ export async function downloadCalculationPdf(
             row('Кол-во деталей', String(job.partCount)),
             row('Цена врезки', formatMoney(job.piercePrice)),
             row('Разработка макета', formatMoney(job.layoutPrice)),
-            row('Коэф. оператора', formatNumber(job.operatorCoef, 2)),
+            row('Коэф. оператора', formatNumber(settings.operatorCoef, 2)),
             row('Цена металла', `${formatMoney(job.metalPricePerM2)}/м²`),
           ],
         },

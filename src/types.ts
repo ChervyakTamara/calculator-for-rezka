@@ -26,6 +26,7 @@ export interface PriceSettings {
   airPressure: number
   depreciationPerHour: number
   operatorPerHour: number
+  operatorCoef: number
   markupPercent: number
   thinCoeffs: MetalCoefficients
   mediumCoeffs: MetalCoefficients
@@ -44,7 +45,6 @@ export interface JobInput {
   partCount: number
   piercePrice: number
   layoutPrice: number
-  operatorCoef: number
   metalPricePerM2: number
 }
 

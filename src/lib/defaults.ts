@@ -31,6 +31,7 @@ export const DEFAULT_SETTINGS: PriceSettings = {
   airPressure: 16,
   depreciationPerHour: 800,
   operatorPerHour: 450,
+  operatorCoef: 1,
   markupPercent: 25,
   thinCoeffs: {
     steel: 1,
@@ -67,6 +68,5 @@ export const DEFAULT_JOB: JobInput = {
   partCount: 10,
   piercePrice: 15,
   layoutPrice: 500,
-  operatorCoef: 1,
   metalPricePerM2: 8500,
 }

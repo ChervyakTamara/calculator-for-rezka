@@ -128,7 +128,7 @@ export function calculateJob(job: JobInput, settings: PriceSettings): Calculatio
   const layoutCost = job.layoutPrice
   const depreciationCost = settings.depreciationPerHour * totalTimeHours
   const operatorCost =
-    settings.operatorPerHour * totalTimeHours * job.operatorCoef
+    settings.operatorPerHour * totalTimeHours * settings.operatorCoef
 
   const subtotal =
     materialCost +
