@@ -51,6 +51,7 @@ export async function downloadCalculationPdf(
         table: {
           widths: ['*', '*'],
           body: [
+            row('Заказчик', job.customer.trim() || '—'),
             row('Материал', MATERIAL_LABELS[job.material]),
             row('Толщина', `${formatNumber(job.thickness, 1)} мм`),
             row('Газ', gasInput),

@@ -57,6 +57,7 @@ export const DEFAULT_SETTINGS: PriceSettings = {
 }
 
 export const DEFAULT_JOB: JobInput = {
+  customer: '',
   material: 'steel',
   thickness: 3,
   gas: 'auto',

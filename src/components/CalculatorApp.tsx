@@ -136,6 +136,16 @@ export function CalculatorApp({
 
       <main className="flex flex-col gap-px bg-neutral-400 p-px sm:gap-0 sm:bg-neutral-400 sm:p-4 sm:pt-5">
         <Card title="Параметры заказа">
+          <div className="mb-3">
+            <Field label="Заказчик">
+              <TextInput
+                placeholder="Название компании или ФИО"
+                value={job.customer}
+                onChange={(e) => update('customer', e.target.value)}
+              />
+            </Field>
+          </div>
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-3">
               <Field label="Материал">

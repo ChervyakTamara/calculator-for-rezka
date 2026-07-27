@@ -34,6 +34,7 @@ export interface PriceSettings {
 }
 
 export interface JobInput {
+  customer: string
   material: Material
   thickness: number
   gas: GasType
