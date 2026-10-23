@@ -1,3 +1,4 @@
+import { DxfImport } from './DxfImport'
 import { useMemo, useState } from 'react'
 import type { JobInput, SavedMetalPrice } from '../types'
 import { calculateJob, formatMoney, formatNumber, formatTime } from '../lib/calculator'
@@ -135,6 +136,7 @@ export function CalculatorApp({
       </header>
 
       <main className="flex flex-col gap-px bg-neutral-400 p-px sm:gap-0 sm:bg-neutral-400 sm:p-4 sm:pt-5">
+        <DxfImport job={job} onChange={onJobChange} />
         <Card title="Параметры заказа">
           <div className="mb-3">
             <Field label="Заказчик">
@@ -410,3 +412,4 @@ export function CalculatorApp({
     </div>
   )
 }
+
