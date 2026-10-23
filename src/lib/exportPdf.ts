@@ -1,3 +1,5 @@
+import pdfMake from 'pdfmake/build/pdfmake'
+import pdfFonts from 'pdfmake/build/vfs_fonts'
 import type { CalculationResult, JobInput, PriceSettings } from '../types'
 import { formatMoney, formatNumber, formatTime } from './calculator'
 import { GAS_LABELS, MATERIAL_LABELS } from './defaults'
@@ -30,12 +32,7 @@ export async function downloadCalculationPdf(
   settings: PriceSettings,
   result: CalculationResult,
 ): Promise<void> {
-  const [{ default: pdfMake }, { default: pdfFonts }] = await Promise.all([
-    import('pdfmake/build/pdfmake'),
-    import('pdfmake/build/vfs_fonts'),
-  ])
-
-  pdfMake.addVirtualFileSystem(pdfFonts)
+pdfMake.addVirtualFileSystem(pdfFonts)
 
   const gasInput = job.gas === 'auto' ? GAS_LABELS.auto : GAS_LABELS[job.gas]
 
@@ -130,3 +127,4 @@ export async function downloadCalculationPdf(
 
   await pdfMake.createPdf(docDefinition).download(`raschet-lazernoj-rezki-${fileNameDate()}.pdf`)
 }
+

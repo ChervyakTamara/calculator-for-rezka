@@ -37,7 +37,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
-        globIgnores: ['**/pdfmake*.js', '**/vfs_fonts*.js'],
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/api/],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
@@ -50,3 +50,4 @@ export default defineConfig({
     }),
   ],
 })
+
