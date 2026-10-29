@@ -12,7 +12,7 @@ export interface ImportedPart {
   warnings: string[]
 }
 type Point = { x: number; y: number; z?: number; bulge?: number }
-type Entity = { controlPoints?: Point[]; knotValues?: number[]; degreeOfSplineCurve?: number; weights?: number[]; closed?: boolean; periodic?: boolean; type: string; vertices?: Point[]; center?: Point; radius?: number; startAngle?: number; endAngle?: number; shape?: boolean; inPaperSpace?: boolean; extrusionDirection?: Point }
+type Entity = { majorAxisEndPoint?: Point; axisRatio?: number; controlPoints?: Point[]; knotValues?: number[]; degreeOfSplineCurve?: number; weights?: number[]; closed?: boolean; periodic?: boolean; type: string; vertices?: Point[]; center?: Point; radius?: number; startAngle?: number; endAngle?: number; shape?: boolean; inPaperSpace?: boolean; extrusionDirection?: Point }
 type Edge = { a: Point; b: Point; length: number; bounds: Point[]; key: string }
 const TAU = Math.PI * 2
 const norm = (a: number) => (a % TAU + TAU) % TAU
@@ -25,7 +25,7 @@ export function parseDxf(text: string, fileName: string): ImportedPart {
   let inEntities = false
   const splineWeights: number[][] = []
   let currentWeights: number[] | undefined
-  const allowed = new Set(['LINE','LWPOLYLINE','POLYLINE','VERTEX','SEQEND','ARC','CIRCLE','SPLINE','TEXT','MTEXT','DIMENSION','POINT','VIEWPORT','ATTDEF','ATTRIB'])
+  const allowed = new Set(['LINE','LWPOLYLINE','POLYLINE','VERTEX','SEQEND','ARC','CIRCLE','ELLIPSE','SPLINE','TEXT','MTEXT','DIMENSION','POINT','VIEWPORT','ATTDEF','ATTRIB'])
   for (let i = 0; i + 1 < pairs.length; i += 2) {
     const code = pairs[i].trim(), value = pairs[i + 1].trim()
     if (code === '2' && value === 'ENTITIES') inEntities = true
@@ -88,6 +88,8 @@ export function parseDxf(text: string, fileName: string): ImportedPart {
           arc(c, distance(c, a), Math.atan2(a.y - c.y, a.x - c.x), 4 * Math.atan(bulge))
         }
       }
+    } else if (e.type === 'ELLIPSE') {
+      add(ellipseEdge(e, scale))
     } else if (e.type === 'SPLINE') {
       const points = sampleSpline(e, scale)
       const forward = points.map(pointKey).join(';'), reverse = [...points].reverse().map(pointKey).join(';')
@@ -170,3 +172,41 @@ function sampleSpline(e: Entity, scale: number): Point[] {
   return points
 }
 
+
+function ellipseEdge(e: Entity, scale: number): Edge {
+  const c = e.center, axis = e.majorAxisEndPoint, ratio = e.axisRatio
+  const start = e.startAngle ?? 0, end = e.endAngle ?? TAU
+  if (!c || !axis || ratio === undefined || ![c.x, c.y, axis.x, axis.y, ratio, start, end].every(Number.isFinite) || ratio <= 0 || ratio > 1 || Math.abs(axis.z ?? 0) > 1e-6) {
+    throw new Error('Некорректные параметры эллипса в DXF.')
+  }
+  const major = Math.hypot(axis.x, axis.y), minor = major * ratio
+  if (!major) throw new Error('Нулевая ось эллипса в DXF.')
+  const full = Math.abs(end - start) >= TAU - 1e-10
+  const sweep = full ? TAU : norm(end - start)
+  if (sweep < 1e-12) throw new Error('Эллиптическая дуга имеет нулевую длину.')
+  // DXF majorAxisEndPoint is a vector relative to the centre.
+  const at = (t: number): Point => ({ x: c.x + axis.x * Math.cos(t) - axis.y * ratio * Math.sin(t), y: c.y + axis.y * Math.cos(t) + axis.x * ratio * Math.sin(t) })
+  const a = at(start), b = full ? a : at(start + sweep)
+  const bounds = [a, b]
+  const tx = Math.atan2(-axis.y * ratio, axis.x), ty = Math.atan2(axis.x * ratio, axis.y)
+  for (const t of [tx, tx + Math.PI, ty, ty + Math.PI]) {
+    if (full || norm(t - start) <= sweep + 1e-10) bounds.push(at(t))
+  }
+  const speed = (t: number) => Math.hypot(major * Math.sin(t), minor * Math.cos(t))
+  const simpson = (a: number, b: number) => (b - a) / 6 * (speed(a) + 4 * speed((a + b) / 2) + speed(b))
+  function integrate(a: number, b: number, whole: number, tolerance: number, depth: number): number {
+    const m = (a + b) / 2, left = simpson(a, m), right = simpson(m, b), delta = left + right - whole
+    if (Math.abs(delta) <= 15 * tolerance) return left + right + delta / 15
+    if (depth >= 24) throw new Error('Не удалось точно вычислить длину эллипса.')
+    return integrate(a, m, left, tolerance / 2, depth + 1) + integrate(m, b, right, tolerance / 2, depth + 1)
+  }
+  // Split initially to avoid aliasing full/half revolutions in quadrature.
+  let length = 0
+  for (let i = 0; i < 8; i++) {
+    const lo = start + sweep * i / 8, hi = start + sweep * (i + 1) / 8
+    length += integrate(lo, hi, simpson(lo, hi), 0.0001 / scale / 8, 0)
+  }
+  const orientation = norm(Math.atan2(axis.y, axis.x)) % Math.PI
+  const key = `E${pointKey(c)}:${major.toFixed(5)}:${ratio.toFixed(8)}:${orientation.toFixed(8)}:${full ? 'full' : [pointKey(a), pointKey(b), pointKey(at(start + sweep / 2))].join(':')}`
+  return { a, b, bounds, length, key }
+}
